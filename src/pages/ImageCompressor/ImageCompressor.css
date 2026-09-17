@@ -1,0 +1,61 @@
+/* Layout for the compressor tool: preview, quality slider, stats, action. */
+.compressor__intro {
+  color: var(--text-muted);
+  margin-top: 0;
+}
+
+.compressor__error {
+  color: var(--error);
+}
+
+.compressor__result {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.compressor__preview {
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  align-self: flex-start;
+}
+
+.compressor__quality {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-h);
+}
+
+.compressor__stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.compressor__savings {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.compressor__download {
+  align-self: flex-start;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.compressor__download:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

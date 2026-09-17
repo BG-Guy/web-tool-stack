@@ -1,0 +1,28 @@
+/* Dashed drop target used by the drop-zone component. */
+.drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  padding: 2rem;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  color: var(--text-muted);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.drop-zone:hover {
+  border-color: var(--accent);
+}
+
+.drop-zone--active {
+  border-color: var(--accent);
+  background-color: var(--accent-bg);
+}
+
+.drop-zone__label {
+  margin: 0;
+  font-size: 0.95rem;
+}

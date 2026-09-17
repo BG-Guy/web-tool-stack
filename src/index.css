@@ -1,0 +1,48 @@
+/* Global resets, CSS variables, and base typography only.
+   Anything component-specific lives in that component's own CSS file. */
+:root {
+  --text: #4b5563;
+  --text-muted: #6b7280;
+  --text-h: #111827;
+  --bg: #ffffff;
+  --surface: #f9fafb;
+  --border: #e5e7eb;
+  --accent: #7c3aed;
+  --accent-bg: rgba(124, 58, 237, 0.08);
+  --error: #dc2626;
+
+  color-scheme: light dark;
+  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #d1d5db;
+    --text-muted: #9ca3af;
+    --text-h: #f9fafb;
+    --bg: #111827;
+    --surface: #1f2937;
+    --border: #374151;
+    --accent: #a78bfa;
+    --accent-bg: rgba(167, 139, 250, 0.12);
+    --error: #f87171;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+}
+
+h1, h2, h3 {
+  color: var(--text-h);
+}
+
+button {
+  font-family: inherit;
+}

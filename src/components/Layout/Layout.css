@@ -1,0 +1,56 @@
+/* Shared page shell: sticky header, centered content column, footer. */
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.layout__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.layout__brand {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+.layout__nav {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.layout__nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.layout__nav a:hover {
+  color: var(--accent);
+}
+
+.layout__content {
+  flex: 1;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+.layout__footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.layout__footer p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
