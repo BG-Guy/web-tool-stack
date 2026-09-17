@@ -8,7 +8,7 @@ export function Home() {
     <div className="home">
       <h1 className="home__title">Free, private image tools</h1>
       <p className="home__subtitle">
-        Compress and convert images entirely in your browser. Nothing leaves your device.
+        Compress, convert, and edit images entirely in your browser. Nothing leaves your device.
       </p>
       <div className="home__grid">
         <ToolCard
@@ -22,6 +22,12 @@ export function Home() {
           icon="🔄"
           title="Convert Image"
           description="Convert between JPG, PNG, and WebP formats."
+        />
+        <ToolCard
+          to="/remove-text"
+          icon="🩹"
+          title="Remove Text"
+          description="Paint over text or objects and blend them away."
         />
       </div>
     </div>

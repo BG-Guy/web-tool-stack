@@ -12,6 +12,7 @@ export function Layout() {
         <nav className="layout__nav">
           <Link to="/compress-image">Compress</Link>
           <Link to="/convert-image">Convert</Link>
+          <Link to="/remove-text">Remove Text</Link>
         </nav>
       </header>
       <main className="layout__content">

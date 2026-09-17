@@ -5,6 +5,7 @@ import { Layout } from './components/Layout/Layout'
 import { Home } from './pages/Home/Home'
 import { ImageCompressor } from './pages/ImageCompressor/ImageCompressor'
 import { ImageConverter } from './pages/ImageConverter/ImageConverter'
+import { RemoveText } from './pages/RemoveText/RemoveText'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route index element={<Home />} />
         <Route path="compress-image" element={<ImageCompressor />} />
         <Route path="convert-image" element={<ImageConverter />} />
+        <Route path="remove-text" element={<RemoveText />} />
       </Route>
     </Routes>
   )
