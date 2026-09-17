@@ -1,4 +1,4 @@
-/* Layout for the converter tool: preview, format picker, action. */
+/* Layout for the converter tool: preview, format picker, quality, stats, action. */
 .converter__intro {
   color: var(--text-muted);
   margin-top: 0;
@@ -42,6 +42,41 @@
 .converter__format-btn--active {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.converter__warning {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-size: 0.85rem;
+}
+
+.converter__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  max-width: 320px;
+}
+
+.converter__stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.converter__shrunk {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.converter__grew {
+  color: var(--error);
+  font-weight: 600;
 }
 
 .converter__download {

@@ -64,8 +64,9 @@ export function ImageCompressor() {
   ) {
     setIsProcessing(true)
     try {
-      const canvas = drawImageToCanvas(img, targetMaxDimension ?? undefined)
       const mimeType = resolveFormat(targetFormat, imgHasAlpha)
+      const backgroundColor = mimeType === 'image/jpeg' ? '#ffffff' : undefined
+      const canvas = drawImageToCanvas(img, targetMaxDimension ?? undefined, backgroundColor)
       const blob = await canvasToBlob(canvas, mimeType, targetQuality)
       setResultBlob(blob)
     } catch {

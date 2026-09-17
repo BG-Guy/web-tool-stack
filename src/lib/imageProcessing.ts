@@ -22,10 +22,14 @@ export function loadImageFromFile(file: File): Promise<HTMLImageElement> {
 // Draws an image onto an off-screen canvas so it can be re-encoded
 // (compressed or converted to another format). If maxDimension is set
 // and the image exceeds it, the image is downscaled to fit — resizing
-// is usually the single biggest lever for reducing file size.
+// is usually the single biggest lever for reducing file size. If
+// backgroundColor is set, it's filled behind the image first — needed
+// before exporting to a format with no alpha channel (JPEG), since
+// browsers otherwise flatten transparent pixels to black.
 export function drawImageToCanvas(
   img: HTMLImageElement,
   maxDimension?: number,
+  backgroundColor?: string,
 ): HTMLCanvasElement {
   let { naturalWidth: width, naturalHeight: height } = img
   if (maxDimension && Math.max(width, height) > maxDimension) {
@@ -38,6 +42,10 @@ export function drawImageToCanvas(
   canvas.height = height
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas 2D context is not available.')
+  if (backgroundColor) {
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(0, 0, width, height)
+  }
   ctx.drawImage(img, 0, 0, width, height)
   return canvas
 }
