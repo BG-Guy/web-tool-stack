@@ -1,4 +1,4 @@
-/* Layout for the compressor tool: preview, quality slider, stats, action. */
+/* Layout for the compressor tool: preview, controls, stats, action. */
 .compressor__intro {
   color: var(--text-muted);
   margin-top: 0;
@@ -24,12 +24,24 @@
   align-self: flex-start;
 }
 
-.compressor__quality {
+.compressor__quality,
+.compressor__field {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   font-size: 0.9rem;
   color: var(--text-h);
+  max-width: 320px;
+}
+
+.compressor__field select,
+.compressor__field input {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-h);
+  font-size: 0.9rem;
 }
 
 .compressor__stats {
