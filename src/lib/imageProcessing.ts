@@ -2,8 +2,10 @@
 // exporting the result. Every image tool (compressor, converter, ...)
 // builds on these instead of re-implementing canvas plumbing.
 
-// Reads a File into an <img> element so it can be drawn onto a canvas.
-export function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+// Reads a File/Blob into an <img> element so it can be drawn onto a canvas.
+// Accepting Blob (not just File) lets a pipeline re-decode an intermediate
+// result — e.g. a compressed blob — before feeding it into the next step.
+export function loadImageFromFile(file: Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const img = new Image()

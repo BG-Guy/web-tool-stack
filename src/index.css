@@ -3,28 +3,35 @@
 :root {
   --text: #4b5563;
   --text-muted: #6b7280;
-  --text-h: #111827;
+  --text-h: #0b2545;
   --bg: #ffffff;
-  --surface: #f9fafb;
-  --border: #e5e7eb;
-  --accent: #7c3aed;
-  --accent-bg: rgba(124, 58, 237, 0.08);
+  --surface: #f7f9fc;
+  --border: #e2e8f0;
+
+  /* Brand: navy + warm orange. --navy is used as a fixed brand color
+     (e.g. the hero band) rather than flipping with the theme. */
+  --navy: #0b2545;
+  --navy-light: #123a6b;
+  --accent: #ff6b35;
+  --accent-hover: #e4551f;
+  --accent-bg: rgba(255, 107, 53, 0.1);
   --error: #dc2626;
 
   color-scheme: light dark;
-  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  font: 16px/1.5 -apple-system, 'Segoe UI', system-ui, Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #d1d5db;
     --text-muted: #9ca3af;
-    --text-h: #f9fafb;
-    --bg: #111827;
-    --surface: #1f2937;
-    --border: #374151;
-    --accent: #a78bfa;
-    --accent-bg: rgba(167, 139, 250, 0.12);
+    --text-h: #f4f7fb;
+    --bg: #0d1526;
+    --surface: #16223b;
+    --border: #2a3958;
+    --accent: #ff8258;
+    --accent-hover: #ff9d78;
+    --accent-bg: rgba(255, 130, 88, 0.14);
     --error: #f87171;
   }
 }
@@ -41,6 +48,8 @@ body {
 
 h1, h2, h3 {
   color: var(--text-h);
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 button {

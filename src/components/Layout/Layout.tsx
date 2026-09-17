@@ -10,8 +10,6 @@ export function Layout() {
           Web Tool Stack
         </Link>
         <nav className="layout__nav">
-          <Link to="/compress-image">Compress</Link>
-          <Link to="/convert-image">Convert</Link>
           <Link to="/remove-text">Remove Text</Link>
         </nav>
       </header>

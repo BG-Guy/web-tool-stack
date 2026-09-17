@@ -1,0 +1,478 @@
+/* Styles for the whole 4-step wizard: hero band, stepper, step cards,
+   forms, and the upload/progress/results lists each step renders. */
+
+.workflow {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* --- Hero --- */
+.workflow__hero {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+  color: #fff;
+  padding: 2.75rem 1.5rem;
+  border-radius: 20px;
+  text-align: center;
+  margin-bottom: 2rem;
+  box-shadow: 0 12px 30px -12px rgba(11, 37, 69, 0.45);
+}
+
+.workflow__eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.workflow__title {
+  margin: 0 0 0.75rem;
+  color: #fff;
+  font-size: clamp(1.8rem, 4vw, 2.75rem);
+}
+
+.workflow__subtitle {
+  margin: 0 auto;
+  max-width: 560px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+}
+
+/* --- Stepper --- */
+.stepper {
+  display: flex;
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  gap: 0.4rem;
+  overflow-x: auto;
+}
+
+.stepper__item {
+  flex: 1;
+  min-width: 90px;
+}
+
+.stepper__button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  padding: 0.6rem 0.4rem;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.stepper__button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.stepper__dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.stepper__button--current .stepper__dot {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.stepper__button--completed .stepper__dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.stepper__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stepper__button--current .stepper__label {
+  color: var(--text-h);
+}
+
+/* --- Panel + shared step layout --- */
+.workflow__panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.75rem;
+}
+
+.wizard-step__title {
+  margin: 0 0 0.4rem;
+  font-size: 1.4rem;
+}
+
+.wizard-step__hint {
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+}
+
+.wizard-step__warning {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-size: 0.85rem;
+}
+
+.wizard-step__note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.wizard-step__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.wizard-step__actions--top {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  justify-content: flex-start;
+}
+
+.wizard-step__count {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* --- Buttons --- */
+.btn {
+  padding: 0.6rem 1.3rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn--primary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn--secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-h);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn--secondary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* --- Step 1: upload grid --- */
+.upload-grid {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.9rem;
+}
+
+.upload-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.upload-card__thumb {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+}
+
+.upload-card__meta {
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.upload-card__name {
+  font-size: 0.8rem;
+  color: var(--text-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-card__size {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.upload-card__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(11, 37, 69, 0.75);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* --- Step 2: option cards --- */
+.option-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1rem;
+  background: var(--bg);
+}
+
+.option-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.option-card__header input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.option-card__title {
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.option-card__description {
+  margin: 0.35rem 0 0 1.7rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.option-card__body {
+  margin: 1rem 0 0 1.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  max-width: 320px;
+}
+
+.field select,
+.field input[type='number'] {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-h);
+  font-size: 0.9rem;
+}
+
+/* --- Step 3: progress list --- */
+.progress-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.progress-list__icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--border);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.progress-list__item--processing .progress-list__icon {
+  background: var(--accent-bg);
+  color: var(--accent);
+  animation: workflow-pulse 1s ease-in-out infinite;
+}
+
+.progress-list__item--done .progress-list__icon {
+  background: var(--accent);
+  color: #fff;
+}
+
+.progress-list__item--error .progress-list__icon {
+  background: var(--error);
+  color: #fff;
+}
+
+.progress-list__name {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progress-list__status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.progress-list__item--error .progress-list__status {
+  color: var(--error);
+}
+
+@keyframes workflow-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* --- Step 4: results grid --- */
+.results-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1rem;
+}
+
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.result-card__thumb {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  display: block;
+  background: var(--surface);
+}
+
+.result-card__thumb--error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--error);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.result-card__meta {
+  padding: 0.7rem 0.8rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.result-card__name {
+  font-size: 0.85rem;
+  color: var(--text-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-card__size {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.result-card__error {
+  font-size: 0.78rem;
+  color: var(--error);
+}
+
+.result-card__download {
+  margin: 0.6rem 0.8rem 0.8rem;
+}
+
+/* --- Small screens: keep the stepper usable, stack actions --- */
+@media (max-width: 480px) {
+  .workflow__hero {
+    padding: 2rem 1.25rem;
+  }
+
+  .stepper__label {
+    display: none;
+  }
+}
