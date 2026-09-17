@@ -321,6 +321,49 @@
   font-size: 0.9rem;
 }
 
+.field__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field__row input[type='number'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.field__unit {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.field__clear {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.field__tag {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.field__estimate {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 /* --- Step 3: progress list --- */
 .progress-list {
   list-style: none;

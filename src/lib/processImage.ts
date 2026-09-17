@@ -10,6 +10,7 @@ import {
   drawImageToCanvas,
   loadImageFromFile,
 } from './imageProcessing'
+import { solveQualityForTargetSize, solveResolutionForTargetSize } from './sizeEstimate'
 
 export type ConvertFormat = 'image/png' | 'image/jpeg' | 'image/webp'
 
@@ -17,6 +18,11 @@ export interface CompressOptions {
   enabled: boolean
   quality: number
   maxDimension: number | null
+  // When set, quality/maxDimension above are treated as a starting point:
+  // whichever of the two `solveFor` does NOT name is solved per-image via
+  // binary search so the compressed output lands close to this size.
+  targetSizeKB: number | null
+  solveFor: 'resolution' | 'quality'
 }
 
 export interface ConvertOptions {
@@ -36,8 +42,46 @@ function formatSupportsQuality(mimeType: string) {
 
 // Picks WebP for images with transparency (JPEG has no alpha channel and
 // would flatten transparent pixels to black), JPEG otherwise.
-function autoCompressFormat(hasAlpha: boolean): 'image/jpeg' | 'image/webp' {
+export function autoCompressFormat(hasAlpha: boolean): 'image/jpeg' | 'image/webp' {
   return hasAlpha ? 'image/webp' : 'image/jpeg'
+}
+
+// Runs the compress stage for one already-decoded image: either a plain
+// fixed quality/resize encode, or — when a target size is set — a
+// per-image binary search for whichever of quality/resolution isn't the
+// fixed "driver", so each image in the batch is tuned individually
+// rather than reusing one guess from a single preview image.
+async function runCompressStage(
+  image: HTMLImageElement,
+  options: CompressOptions,
+): Promise<{ blob: Blob; mimeType: string }> {
+  const hasAlpha = canvasHasAlpha(drawImageToCanvas(image))
+  const mimeType = autoCompressFormat(hasAlpha)
+
+  if (options.targetSizeKB) {
+    const targetBytes = options.targetSizeKB * 1024
+    if (options.solveFor === 'quality') {
+      const { blob } = await solveQualityForTargetSize({
+        image,
+        mimeType,
+        maxDimension: options.maxDimension ?? undefined,
+        targetBytes,
+      })
+      return { blob, mimeType }
+    }
+    const { blob } = await solveResolutionForTargetSize({
+      image,
+      mimeType,
+      quality: options.quality,
+      targetBytes,
+    })
+    return { blob, mimeType }
+  }
+
+  const backgroundColor = mimeType === 'image/jpeg' ? '#ffffff' : undefined
+  const canvas = drawImageToCanvas(image, options.maxDimension ?? undefined, backgroundColor)
+  const blob = await canvasToBlob(canvas, mimeType, options.quality)
+  return { blob, mimeType }
 }
 
 // Processes one file through the enabled pipeline stages and returns the
@@ -56,12 +100,9 @@ export async function processImage(
   let mimeType = file.type
 
   if (options.compress.enabled) {
-    const hasAlpha = canvasHasAlpha(drawImageToCanvas(image))
-    const compressMime = autoCompressFormat(hasAlpha)
-    const backgroundColor = compressMime === 'image/jpeg' ? '#ffffff' : undefined
-    const canvas = drawImageToCanvas(image, options.compress.maxDimension ?? undefined, backgroundColor)
-    blob = await canvasToBlob(canvas, compressMime, options.compress.quality)
-    mimeType = compressMime
+    const compressed = await runCompressStage(image, options.compress)
+    blob = compressed.blob
+    mimeType = compressed.mimeType
     if (options.convert.enabled) {
       image = await loadImageFromFile(blob) // feed the compressed result into the convert stage
     }

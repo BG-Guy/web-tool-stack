@@ -3,8 +3,8 @@
 // is active and how far the user has gotten — steps ahead of maxReached
 // are locked in the Stepper and never rendered as reachable, so nothing
 // can run out of order.
-import { useState } from 'react'
-import { downloadBlob, replaceExtension } from '../../lib/imageProcessing'
+import { useEffect, useState } from 'react'
+import { downloadBlob, loadImageFromFile, replaceExtension } from '../../lib/imageProcessing'
 import { buildZip, processImage, type PipelineOptions } from '../../lib/processImage'
 import { Stepper, type WizardStep } from './Stepper'
 import { StepUpload, type UploadedImage } from './StepUpload'
@@ -14,7 +14,7 @@ import { StepResults } from './StepResults'
 import './ImageWorkflow.css'
 
 const DEFAULT_OPTIONS: PipelineOptions = {
-  compress: { enabled: true, quality: 0.75, maxDimension: 1920 },
+  compress: { enabled: true, quality: 0.75, maxDimension: 1920, targetSizeKB: null, solveFor: 'resolution' },
   convert: { enabled: false, format: 'image/webp', quality: 0.85 },
 }
 
@@ -26,6 +26,28 @@ export function ImageWorkflow() {
   const [options, setOptions] = useState<PipelineOptions>(DEFAULT_OPTIONS)
   const [results, setResults] = useState<ResultItem[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [referenceImage, setReferenceImage] = useState<HTMLImageElement | null>(null)
+
+  // Decodes the first uploaded image so Step 2 can run live target-size
+  // estimates against real pixel data without decoding on every keystroke.
+  useEffect(() => {
+    const firstFile = images[0]?.file
+    if (!firstFile) {
+      setReferenceImage(null)
+      return
+    }
+    let cancelled = false
+    loadImageFromFile(firstFile)
+      .then((img) => {
+        if (!cancelled) setReferenceImage(img)
+      })
+      .catch(() => {
+        if (!cancelled) setReferenceImage(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [images])
 
   function goToStep(target: WizardStep) {
     if (target <= maxReached) setStep(target)
@@ -154,6 +176,7 @@ export function ImageWorkflow() {
           <StepOptions
             options={options}
             onChange={setOptions}
+            referenceImage={referenceImage}
             onBack={() => goToStep(1)}
             onNext={() => {
               // Entering Step 3 always starts from a clean slate — otherwise
