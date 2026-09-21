@@ -25,7 +25,28 @@ text without an AI model.
 - [Vite](https://vite.dev/) for dev server and bundling
 - [React Router](https://reactrouter.com/) for the two routes (wizard, Remove Text)
 - [JSZip](https://stuk.github.io/jszip/) for bundling batch downloads
-- No backend — every operation happens client-side via the Canvas API
+- [jSquash](https://github.com/jamsinclair/jSquash) (`@jsquash/jpeg` (mozjpeg), `@jsquash/webp`,
+  `@jsquash/avif`, `@jsquash/oxipng`, `@jsquash/resize`) — WASM builds of the real reference
+  encoders, in place of the browser's built-in canvas encoder, for meaningfully smaller output
+  at the same visual quality (plus real AVIF support and lossless PNG optimization)
+- No backend — every operation happens client-side, decoding via `createImageBitmap` +
+  `OffscreenCanvas` and encoding via the WASM codecs above
+
+### Compress/convert pipeline
+
+The compress and convert stages (`lib/pipelineCore.ts`, `lib/offscreenPipeline.ts`,
+`lib/wasmCodecs.ts`, `lib/sizeEstimate.ts`) run entirely inside Web Workers, not the main thread:
+
+- **Encoding** goes through jSquash's WASM codecs (mozjpeg for JPEG, real WebP/AVIF encoders,
+  oxipng for PNG) instead of `canvas.toBlob()`, which gives smaller files at equal quality and
+  adds AVIF as a convert target. PNG has no lossy quality lever — oxipng only losslessly
+  re-compresses, but still shrinks output noticeably versus the browser's baseline PNG encoder.
+- **Resizing** goes through jSquash's WASM lanczos3 resizer instead of canvas's own
+  bilinear/bicubic `drawImage` scaling, for a sharper result at the same target size.
+- **Batch processing** (`lib/imageWorkerPool.ts`) runs across a small pool of Web Workers
+  (`workers/image.worker.ts`), dispatched round-robin, so a batch of images uses multiple CPU
+  cores in parallel instead of processing one image at a time on the main thread. The same pool
+  powers the Step 2 live target-size estimate, so the encode trials it runs don't block the UI.
 
 ## Getting started
 
@@ -44,8 +65,11 @@ src/
   pages/
     ImageWorkflow/      The 4-step batch wizard (home page)
     RemoveText/         The standalone manual text-removal tool
-  lib/                  Shared browser helpers: canvas/image utilities,
-                        the batch pipeline, and the local inpainting solver
+  lib/                  Shared browser helpers: canvas/image utilities, the
+                        WASM codec/resize wrappers, the worker-safe pixel
+                        pipeline, the worker pool, and the local inpainting
+                        solver
+  workers/              The image.worker.ts entry point the pool runs
   App.tsx               Route table
   main.tsx              Entry point
 ```

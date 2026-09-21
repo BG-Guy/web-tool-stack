@@ -5,7 +5,8 @@
 // can run out of order.
 import { useEffect, useState } from 'react'
 import { downloadBlob, loadImageFromFile, replaceExtension } from '../../lib/imageProcessing'
-import { buildZip, processImage, type PipelineOptions } from '../../lib/processImage'
+import { imageWorkerPool } from '../../lib/imageWorkerPool'
+import { buildZip, type PipelineOptions } from '../../lib/processImage'
 import { Stepper, type WizardStep } from './Stepper'
 import { StepUpload, type UploadedImage } from './StepUpload'
 import { StepOptions } from './StepOptions'
@@ -83,10 +84,12 @@ export function ImageWorkflow() {
     })
   }
 
-  // Runs the pipeline over every image, one at a time, updating each
-  // row's status as it goes. A single image failing (corrupt file,
-  // unsupported encode, etc.) is caught and recorded per-row rather than
-  // aborting the rest of the batch.
+  // Runs the pipeline over every image in parallel, dispatched to a pool
+  // of Web Workers (see lib/imageWorkerPool.ts) so a batch uses several
+  // CPU cores at once instead of processing one image at a time on the
+  // main thread. Each image updates its own row independently as it
+  // settles; a single image failing (corrupt file, unsupported encode,
+  // etc.) is caught and recorded per-row rather than aborting the batch.
   async function handleStartProcessing() {
     setIsProcessing(true)
     setResults(
@@ -98,31 +101,31 @@ export function ImageWorkflow() {
       })),
     )
 
-    for (const image of images) {
-      setResults((prev) =>
-        prev.map((r) => (r.id === image.id ? { ...r, status: 'processing' } : r)),
-      )
-      try {
-        const { blob, mimeType } = await processImage(image.file, options)
-        const url = URL.createObjectURL(blob)
-        const fileName = replaceExtension(image.file.name, mimeType)
-        setResults((prev) =>
-          prev.map((r) =>
-            r.id === image.id
-              ? { ...r, status: 'done', blob, url, resultSize: blob.size, fileName }
-              : r,
-          ),
-        )
-      } catch (err) {
-        setResults((prev) =>
-          prev.map((r) =>
-            r.id === image.id
-              ? { ...r, status: 'error', error: err instanceof Error ? err.message : 'Processing failed.' }
-              : r,
-          ),
-        )
-      }
-    }
+    await Promise.all(
+      images.map(async (image) => {
+        setResults((prev) => prev.map((r) => (r.id === image.id ? { ...r, status: 'processing' } : r)))
+        try {
+          const { blob, mimeType } = await imageWorkerPool.process(image.file, options)
+          const url = URL.createObjectURL(blob)
+          const fileName = replaceExtension(image.file.name, mimeType)
+          setResults((prev) =>
+            prev.map((r) =>
+              r.id === image.id
+                ? { ...r, status: 'done', blob, url, resultSize: blob.size, fileName }
+                : r,
+            ),
+          )
+        } catch (err) {
+          setResults((prev) =>
+            prev.map((r) =>
+              r.id === image.id
+                ? { ...r, status: 'error', error: err instanceof Error ? err.message : 'Processing failed.' }
+                : r,
+            ),
+          )
+        }
+      }),
+    )
 
     setIsProcessing(false)
   }
@@ -177,6 +180,7 @@ export function ImageWorkflow() {
             options={options}
             onChange={setOptions}
             referenceImage={referenceImage}
+            referenceFile={images[0]?.file ?? null}
             onBack={() => goToStep(1)}
             onNext={() => {
               // Entering Step 3 always starts from a clean slate — otherwise

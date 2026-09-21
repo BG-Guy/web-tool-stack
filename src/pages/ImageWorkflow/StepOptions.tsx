@@ -5,12 +5,14 @@
 // The compress card has an optional "target file size": once set,
 // whichever of quality/max-dimension you drag becomes the fixed input,
 // and the other is solved for live via real trial encodes of the first
-// uploaded image (see lib/sizeEstimate.ts) — there's no formula for this,
-// only actually re-encoding the image tells you the real answer.
+// uploaded image, run in a Worker (see lib/imageWorkerPool.ts /
+// lib/sizeEstimate.ts) — there's no formula for this, only actually
+// re-encoding the image tells you the real answer, and running it off
+// the main thread keeps the slider from janking while it does.
 import { useEffect, useRef, useState } from 'react'
-import { canvasHasAlpha, drawImageToCanvas, formatBytes } from '../../lib/imageProcessing'
-import { autoCompressFormat, type PipelineOptions } from '../../lib/processImage'
-import { solveQualityForTargetSize, solveResolutionForTargetSize } from '../../lib/sizeEstimate'
+import { formatBytes } from '../../lib/imageProcessing'
+import { imageWorkerPool } from '../../lib/imageWorkerPool'
+import type { PipelineOptions } from '../../lib/processImage'
 
 type OptionsUpdate = PipelineOptions | ((prev: PipelineOptions) => PipelineOptions)
 
@@ -18,6 +20,7 @@ interface StepOptionsProps {
   options: PipelineOptions
   onChange: (update: OptionsUpdate) => void
   referenceImage: HTMLImageElement | null
+  referenceFile: File | null
   onBack: () => void
   onNext: () => void
 }
@@ -29,7 +32,7 @@ type EstimateState =
   | { status: 'done'; achievedBytes: number }
 
 function supportsQuality(mimeType: string) {
-  return mimeType === 'image/jpeg' || mimeType === 'image/webp'
+  return mimeType === 'image/jpeg' || mimeType === 'image/webp' || mimeType === 'image/avif'
 }
 
 // Mirrors drawImageToCanvas's own scaling so the displayed dimensions
@@ -41,7 +44,7 @@ function displayDims(image: HTMLImageElement, maxDimension: number) {
   return { width: Math.round(w * scale), height: Math.round(h * scale) }
 }
 
-export function StepOptions({ options, onChange, referenceImage, onBack, onNext }: StepOptionsProps) {
+export function StepOptions({ options, onChange, referenceImage, referenceFile, onBack, onNext }: StepOptionsProps) {
   const hasSelection = options.compress.enabled || options.convert.enabled
   const { compress } = options
   const [estimate, setEstimate] = useState<EstimateState>({ status: 'idle' })
@@ -54,7 +57,7 @@ export function StepOptions({ options, onChange, referenceImage, onBack, onNext 
   // clobber an unrelated edit (e.g. to the Convert card) made in the
   // meantime with a stale snapshot of `options`.
   useEffect(() => {
-    if (!compress.enabled || !compress.targetSizeKB || !referenceImage) {
+    if (!compress.enabled || !compress.targetSizeKB || !referenceFile) {
       setEstimate({ status: 'idle' })
       return
     }
@@ -69,31 +72,25 @@ export function StepOptions({ options, onChange, referenceImage, onBack, onNext 
     const timer = setTimeout(async () => {
       try {
         const targetBytes = targetSizeKB * 1024
-        const mimeType = autoCompressFormat(canvasHasAlpha(drawImageToCanvas(referenceImage)))
+        const result = await imageWorkerPool.estimate({
+          file: referenceFile,
+          solveFor,
+          quality: driverQuality,
+          maxDimension: driverMaxDimension ?? undefined,
+          targetBytes,
+        })
+        if (requestIdRef.current !== requestId) return
+        setEstimate({ status: 'done', achievedBytes: result.achievedBytes })
 
-        if (solveFor === 'quality') {
-          const { quality, blob } = await solveQualityForTargetSize({
-            image: referenceImage,
-            mimeType,
-            maxDimension: driverMaxDimension ?? undefined,
-            targetBytes,
-          })
-          if (requestIdRef.current !== requestId) return
-          setEstimate({ status: 'done', achievedBytes: blob.size })
+        if (solveFor === 'quality' && result.quality !== undefined) {
+          const quality = result.quality
           onChange((prev) =>
             Math.abs(quality - prev.compress.quality) > 0.005
               ? { ...prev, compress: { ...prev.compress, quality } }
               : prev,
           )
-        } else {
-          const { maxDimension, blob } = await solveResolutionForTargetSize({
-            image: referenceImage,
-            mimeType,
-            quality: driverQuality,
-            targetBytes,
-          })
-          if (requestIdRef.current !== requestId) return
-          setEstimate({ status: 'done', achievedBytes: blob.size })
+        } else if (solveFor === 'resolution' && result.maxDimension !== undefined) {
+          const maxDimension = result.maxDimension
           onChange((prev) =>
             maxDimension !== prev.compress.maxDimension
               ? { ...prev, compress: { ...prev.compress, maxDimension } }
@@ -112,7 +109,7 @@ export function StepOptions({ options, onChange, referenceImage, onBack, onNext 
     compress.solveFor,
     compress.quality,
     compress.maxDimension,
-    referenceImage,
+    referenceFile,
     onChange,
   ])
 
@@ -249,7 +246,7 @@ export function StepOptions({ options, onChange, referenceImage, onBack, onNext 
           />
           <span className="option-card__title">Convert format</span>
         </label>
-        <p className="option-card__description">Convert every image to PNG, JPEG, or WebP.</p>
+        <p className="option-card__description">Convert every image to PNG, JPEG, WebP, or AVIF.</p>
 
         {options.convert.enabled && (
           <div className="option-card__body">
@@ -267,6 +264,7 @@ export function StepOptions({ options, onChange, referenceImage, onBack, onNext 
                 <option value="image/png">PNG</option>
                 <option value="image/jpeg">JPEG</option>
                 <option value="image/webp">WebP</option>
+                <option value="image/avif">AVIF</option>
               </select>
             </label>
             {supportsQuality(options.convert.format) && (

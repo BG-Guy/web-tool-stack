@@ -1,18 +1,10 @@
-// Runs the batch pipeline on a single image: compress, then convert, in
-// that fixed order, using only whichever steps are enabled. Each stage
-// re-decodes its predecessor's output blob, so chaining both stages
-// produces exactly what running them one after another by hand would —
-// including the compounding quality loss that implies.
+// Shared types for the compress/convert pipeline, plus the zip bundler.
+// The pixel pipeline itself (decode/resize/encode) lives in pipelineCore.ts
+// and only ever runs inside a Web Worker — see imageWorkerPool.ts for the
+// main-thread entry point that dispatches to it.
 import JSZip from 'jszip'
-import {
-  canvasHasAlpha,
-  canvasToBlob,
-  drawImageToCanvas,
-  loadImageFromFile,
-} from './imageProcessing'
-import { solveQualityForTargetSize, solveResolutionForTargetSize } from './sizeEstimate'
 
-export type ConvertFormat = 'image/png' | 'image/jpeg' | 'image/webp'
+export type ConvertFormat = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/avif'
 
 export interface CompressOptions {
   enabled: boolean
@@ -36,90 +28,10 @@ export interface PipelineOptions {
   convert: ConvertOptions
 }
 
-function formatSupportsQuality(mimeType: string) {
-  return mimeType === 'image/jpeg' || mimeType === 'image/webp'
-}
-
 // Picks WebP for images with transparency (JPEG has no alpha channel and
 // would flatten transparent pixels to black), JPEG otherwise.
 export function autoCompressFormat(hasAlpha: boolean): 'image/jpeg' | 'image/webp' {
   return hasAlpha ? 'image/webp' : 'image/jpeg'
-}
-
-// Runs the compress stage for one already-decoded image: either a plain
-// fixed quality/resize encode, or — when a target size is set — a
-// per-image binary search for whichever of quality/resolution isn't the
-// fixed "driver", so each image in the batch is tuned individually
-// rather than reusing one guess from a single preview image.
-async function runCompressStage(
-  image: HTMLImageElement,
-  options: CompressOptions,
-): Promise<{ blob: Blob; mimeType: string }> {
-  const hasAlpha = canvasHasAlpha(drawImageToCanvas(image))
-  const mimeType = autoCompressFormat(hasAlpha)
-
-  if (options.targetSizeKB) {
-    const targetBytes = options.targetSizeKB * 1024
-    if (options.solveFor === 'quality') {
-      const { blob } = await solveQualityForTargetSize({
-        image,
-        mimeType,
-        maxDimension: options.maxDimension ?? undefined,
-        targetBytes,
-      })
-      return { blob, mimeType }
-    }
-    const { blob } = await solveResolutionForTargetSize({
-      image,
-      mimeType,
-      quality: options.quality,
-      targetBytes,
-    })
-    return { blob, mimeType }
-  }
-
-  const backgroundColor = mimeType === 'image/jpeg' ? '#ffffff' : undefined
-  const canvas = drawImageToCanvas(image, options.maxDimension ?? undefined, backgroundColor)
-  const blob = await canvasToBlob(canvas, mimeType, options.quality)
-  return { blob, mimeType }
-}
-
-// Processes one file through the enabled pipeline stages and returns the
-// final blob plus the mime type it was encoded as. Throws if neither
-// stage is enabled, or if the file can't be decoded as an image.
-export async function processImage(
-  file: File,
-  options: PipelineOptions,
-): Promise<{ blob: Blob; mimeType: string }> {
-  if (!options.compress.enabled && !options.convert.enabled) {
-    throw new Error('No processing operation selected.')
-  }
-
-  let image = await loadImageFromFile(file)
-  let blob: Blob | null = null
-  let mimeType = file.type
-
-  if (options.compress.enabled) {
-    const compressed = await runCompressStage(image, options.compress)
-    blob = compressed.blob
-    mimeType = compressed.mimeType
-    if (options.convert.enabled) {
-      image = await loadImageFromFile(blob) // feed the compressed result into the convert stage
-    }
-  }
-
-  if (options.convert.enabled) {
-    const hasAlpha = canvasHasAlpha(drawImageToCanvas(image))
-    const targetMime = options.convert.format
-    const backgroundColor = targetMime === 'image/jpeg' && hasAlpha ? '#ffffff' : undefined
-    const canvas = drawImageToCanvas(image, undefined, backgroundColor)
-    const quality = formatSupportsQuality(targetMime) ? options.convert.quality : undefined
-    blob = await canvasToBlob(canvas, targetMime, quality)
-    mimeType = targetMime
-  }
-
-  if (!blob) throw new Error('Processing produced no output.')
-  return { blob, mimeType }
 }
 
 // Bundles multiple processed results into a single downloadable zip.

@@ -1,23 +1,30 @@
 // Binary-search solvers that answer "what resolution/quality gets this
 // image close to a target file size?" by actually trial-encoding the
-// image a handful of times — there's no formula for this since it
-// depends entirely on image content, only real encodes give an honest
-// answer. Used both for the live estimate in the UI and for tuning each
-// image individually during real batch processing.
-import { canvasToBlob, drawImageToCanvas } from './imageProcessing'
+// image (with the real WASM codec) a handful of times — there's no
+// formula for this since it depends entirely on image content, only real
+// encodes give an honest answer. Used both for the live estimate in the
+// UI (via solveEstimateInWorker) and for tuning each image individually
+// during real batch processing — both run inside a Worker.
+import { flattenOntoBackground, resizeToMaxDimension } from './offscreenPipeline'
+import { encodeImageData, type CodecMimeType } from './wasmCodecs'
 
 const MIN_DIMENSION = 64
 const MIN_QUALITY = 0.05
 
-function encodeAt(image: HTMLImageElement, maxDimension: number | undefined, quality: number, mimeType: string) {
-  const backgroundColor = mimeType === 'image/jpeg' ? '#ffffff' : undefined
-  const canvas = drawImageToCanvas(image, maxDimension, backgroundColor)
-  return canvasToBlob(canvas, mimeType, quality)
+async function encodeAt(
+  imageData: ImageData,
+  maxDimension: number | undefined,
+  quality: number,
+  mimeType: CodecMimeType,
+): Promise<ArrayBuffer> {
+  const resized = maxDimension ? await resizeToMaxDimension(imageData, maxDimension) : imageData
+  const working = mimeType === 'image/jpeg' ? await flattenOntoBackground(resized, '#ffffff') : resized
+  return encodeImageData(mimeType, working, quality)
 }
 
 interface ResolutionSolveInput {
-  image: HTMLImageElement
-  mimeType: string
+  imageData: ImageData
+  mimeType: CodecMimeType
   quality: number
   targetBytes: number
   iterations?: number
@@ -26,33 +33,33 @@ interface ResolutionSolveInput {
 // Holds quality fixed and binary-searches the max dimension that gets
 // closest to (without exceeding, where possible) the target size.
 export async function solveResolutionForTargetSize({
-  image,
+  imageData,
   mimeType,
   quality,
   targetBytes,
   iterations = 9,
-}: ResolutionSolveInput): Promise<{ maxDimension: number; blob: Blob }> {
-  const nativeMax = Math.max(image.naturalWidth, image.naturalHeight)
+}: ResolutionSolveInput): Promise<{ maxDimension: number; arrayBuffer: ArrayBuffer }> {
+  const nativeMax = Math.max(imageData.width, imageData.height)
 
   // If full resolution already meets the target, there's nothing to shrink.
-  const fullBlob = await encodeAt(image, undefined, quality, mimeType)
-  if (fullBlob.size <= targetBytes) {
-    return { maxDimension: nativeMax, blob: fullBlob }
+  const fullBuffer = await encodeAt(imageData, undefined, quality, mimeType)
+  if (fullBuffer.byteLength <= targetBytes) {
+    return { maxDimension: nativeMax, arrayBuffer: fullBuffer }
   }
 
   let low = MIN_DIMENSION
   let high = nativeMax
-  let best = { maxDimension: low, blob: await encodeAt(image, low, quality, mimeType) }
+  let best = { maxDimension: low, arrayBuffer: await encodeAt(imageData, low, quality, mimeType) }
 
   for (let i = 0; i < iterations; i++) {
     const mid = Math.round((low + high) / 2)
     if (mid === low || mid === high) break
-    const blob = await encodeAt(image, mid, quality, mimeType)
-    if (blob.size > targetBytes) {
+    const arrayBuffer = await encodeAt(imageData, mid, quality, mimeType)
+    if (arrayBuffer.byteLength > targetBytes) {
       high = mid
     } else {
       low = mid
-      best = { maxDimension: mid, blob }
+      best = { maxDimension: mid, arrayBuffer }
     }
   }
 
@@ -60,8 +67,8 @@ export async function solveResolutionForTargetSize({
 }
 
 interface QualitySolveInput {
-  image: HTMLImageElement
-  mimeType: string
+  imageData: ImageData
+  mimeType: CodecMimeType
   maxDimension: number | undefined
   targetBytes: number
   iterations?: number
@@ -70,30 +77,30 @@ interface QualitySolveInput {
 // Holds resolution fixed and binary-searches the quality that gets
 // closest to (without exceeding, where possible) the target size.
 export async function solveQualityForTargetSize({
-  image,
+  imageData,
   mimeType,
   maxDimension,
   targetBytes,
   iterations = 9,
-}: QualitySolveInput): Promise<{ quality: number; blob: Blob }> {
+}: QualitySolveInput): Promise<{ quality: number; arrayBuffer: ArrayBuffer }> {
   // If even full quality meets the target, no need to search further down.
-  const fullBlob = await encodeAt(image, maxDimension, 1, mimeType)
-  if (fullBlob.size <= targetBytes) {
-    return { quality: 1, blob: fullBlob }
+  const fullBuffer = await encodeAt(imageData, maxDimension, 1, mimeType)
+  if (fullBuffer.byteLength <= targetBytes) {
+    return { quality: 1, arrayBuffer: fullBuffer }
   }
 
   let low = MIN_QUALITY
   let high = 1
-  let best = { quality: low, blob: await encodeAt(image, maxDimension, low, mimeType) }
+  let best = { quality: low, arrayBuffer: await encodeAt(imageData, maxDimension, low, mimeType) }
 
   for (let i = 0; i < iterations; i++) {
     const mid = (low + high) / 2
-    const blob = await encodeAt(image, maxDimension, mid, mimeType)
-    if (blob.size > targetBytes) {
+    const arrayBuffer = await encodeAt(imageData, maxDimension, mid, mimeType)
+    if (arrayBuffer.byteLength > targetBytes) {
       high = mid
     } else {
       low = mid
-      best = { quality: mid, blob }
+      best = { quality: mid, arrayBuffer }
     }
   }
 
