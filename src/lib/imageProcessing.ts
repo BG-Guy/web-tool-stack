@@ -52,6 +52,36 @@ export function drawImageToCanvas(
   return canvas
 }
 
+// Center-crops an image to a target aspect ratio (a "cover" crop: the
+// larger dimension is cut down, the full extent of the smaller one is
+// kept) and returns the result at the crop's own native resolution — no
+// upscaling. Shared by any tool that needs to fit an image to a specific
+// ratio (aspect-ratio cropping, fitting a photo into a frame, ...).
+export function cropToAspectRatio(img: HTMLImageElement, ratioW: number, ratioH: number): HTMLCanvasElement {
+  const { naturalWidth: width, naturalHeight: height } = img
+  const targetRatio = ratioW / ratioH
+  const currentRatio = width / height
+
+  let cropWidth = width
+  let cropHeight = height
+  if (currentRatio > targetRatio) {
+    cropWidth = Math.round(height * targetRatio)
+  } else if (currentRatio < targetRatio) {
+    cropHeight = Math.round(width / targetRatio)
+  }
+
+  const srcX = Math.round((width - cropWidth) / 2)
+  const srcY = Math.round((height - cropHeight) / 2)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = cropWidth
+  canvas.height = cropHeight
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context is not available.')
+  ctx.drawImage(img, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+  return canvas
+}
+
 // Checks whether a canvas has any non-opaque pixels. Used to avoid
 // exporting a transparent image as JPEG, which has no alpha channel
 // and would silently flatten transparent areas to black.

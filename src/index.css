@@ -1,5 +1,6 @@
-/* Global resets, CSS variables, and base typography only.
-   Anything component-specific lives in that component's own CSS file. */
+/* Global resets, CSS variables, base typography, and the shared button /
+   form-field primitives used across every tool page (anything more
+   specific than that lives in that page's own CSS file). */
 :root {
   --text: #4b5563;
   --text-muted: #6b7280;
@@ -54,4 +55,64 @@ h1, h2, h3 {
 
 button {
   font-family: inherit;
+}
+
+/* --- Shared buttons --- */
+.btn {
+  padding: 0.6rem 1.3rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn--primary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn--secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-h);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn--secondary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* --- Shared labeled form field (label + slider/select/number) --- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  max-width: 320px;
+}
+
+.field select,
+.field input[type='number'] {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-h);
+  font-size: 0.9rem;
 }

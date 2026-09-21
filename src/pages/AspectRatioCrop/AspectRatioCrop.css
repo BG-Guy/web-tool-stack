@@ -1,0 +1,48 @@
+/* Layout for the aspect-ratio crop tool: preview, ratio picker, output controls. */
+.aspect-crop__intro {
+  color: var(--text-muted);
+  margin-top: 0;
+}
+
+.aspect-crop__error {
+  color: var(--error);
+}
+
+.aspect-crop__result {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.aspect-crop__preview {
+  max-width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  align-self: flex-start;
+}
+
+.aspect-crop__custom {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.aspect-crop__custom .field {
+  max-width: 100px;
+}
+
+.aspect-crop__custom-sep {
+  padding-bottom: 0.6rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.aspect-crop__stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}

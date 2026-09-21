@@ -10,6 +10,8 @@ export function Layout() {
           Web Tool Stack
         </Link>
         <nav className="layout__nav">
+          <Link to="/crop-aspect-ratio">Crop</Link>
+          <Link to="/add-frame">Add Frame</Link>
           <Link to="/remove-text">Remove Text</Link>
         </nav>
       </header>

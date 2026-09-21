@@ -162,46 +162,6 @@
   color: var(--text-muted);
 }
 
-/* --- Buttons --- */
-.btn {
-  padding: 0.6rem 1.3rem;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn--primary {
-  background: var(--accent);
-  color: #fff;
-}
-
-.btn--primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.btn--primary:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.btn--secondary {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text-h);
-}
-
-.btn--secondary:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.btn--secondary:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
 /* --- Step 1: upload grid --- */
 .upload-grid {
   list-style: none;
@@ -300,25 +260,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  font-size: 0.9rem;
-  color: var(--text-h);
-  max-width: 320px;
-}
-
-.field select,
-.field input[type='number'] {
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text-h);
-  font-size: 0.9rem;
 }
 
 .field__row {
